@@ -1,22 +1,4 @@
-# Vercel Fix voor package.json
-
-Vervang de volledige inhoud van je `package.json` in de map `dutch-pronunciation` met onderstaande versie.
-
-Daarna:
-
-1. Opslaan
-2. Oude package.json overschrijven
-3. Uploaden naar GitHub
-4. Vercel opnieuw deployen
-
----
-
-```json
 {
-  "name": "dutch-pronunciation",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -86,19 +68,3 @@ Daarna:
     "vite": "^6.2.0"
   }
 }
-```
-
----
-
-BELANGRIJK:
-
-Deze dependencies zijn expres verwijderd:
-
-* @replit/vite-plugin-cartographer
-* @replit/vite-plugin-dev-banner
-* @replit/vite-plugin-runtime-error-modal
-* @workspace/api-client-react
-* alle `catalog:` verwijzingen
-* alle `workspace:*` verwijzingen
-
-Die veroorzaken de Vercel build errors.
