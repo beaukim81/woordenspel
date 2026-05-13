@@ -28,10 +28,15 @@ interface SpeechResultList {
 function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
-  const row = Array.from({ length: n + 1 }, (_, i) => i);
+
+  const row = Array.from(
+    { length: n + 1 },
+    (_, i) => i
+  );
 
   for (let i = 1; i <= m; i++) {
     let prev = row[0];
+
     row[0] = i;
 
     for (let j = 1; j <= n; j++) {
@@ -40,7 +45,12 @@ function levenshtein(a: string, b: string): number {
       row[j] =
         a[i - 1] === b[j - 1]
           ? prev
-          : 1 + Math.min(prev, row[j], row[j - 1]);
+          : 1 +
+            Math.min(
+              prev,
+              row[j],
+              row[j - 1]
+            );
 
       prev = temp;
     }
@@ -60,7 +70,7 @@ function normalize(s: string): string {
 }
 
 /**
- * Lenient match for children's Dutch speech.
+ * Flexible speech matching for children
  */
 export function isGoodEnough(
   recognized: string,
@@ -75,112 +85,115 @@ export function isGoodEnough(
     .map(normalize)
     .filter(Boolean);
 
-  const candidates = [normalize(recognized), ...parts];
+  const candidates = [
+    normalize(recognized),
+    ...parts,
+  ];
 
-  const isStWord = t.startsWith("st");
-  const isTwWord = t.startsWith("tw");
-  const isDrWord = t.startsWith("dr");
-
-  const isClusterWord =
-    isStWord || isTwWord || isDrWord;
-
-  // ── Build extended candidate list ───────────────────────────────
   const extraCandidates: string[] = [];
 
   for (const r of candidates) {
     if (!r) continue;
 
-    // Strip leading vowel
-    if (/^[eaio]/.test(r)) {
+    // leading vowel removal
+    if (/^[aeiou]/.test(r)) {
       extraCandidates.push(r.slice(1));
     }
 
-    // ST handling
-    if (isStWord && /^ss+/.test(r)) {
-      extraCandidates.push(
-        r.replace(/^s+/, "s")
-      );
+    // ST cluster
+    if (t.startsWith("st")) {
+      if (r.startsWith("ter")) {
+        extraCandidates.push("st" + r.slice(1));
+      }
+
+      if (r.startsWith("toel")) {
+        extraCandidates.push("stoel");
+      }
     }
 
-    // TW handling
-    if (isTwWord && /^tt+/.test(r)) {
-      extraCandidates.push(
-        r.replace(/^t+/, "t")
-      );
+    // TW cluster
+    if (t.startsWith("tw")) {
+      if (r.startsWith("wee")) {
+        extraCandidates.push("t" + r);
+      }
+
+      if (r.startsWith("ee")) {
+        extraCandidates.push("tw" + r);
+      }
     }
 
-    // DR handling
-    if (isDrWord && /^dd+/.test(r)) {
-      extraCandidates.push(
-        r.replace(/^d+/, "d")
-      );
+    // DR cluster
+    if (t.startsWith("dr")) {
+      if (r.startsWith("rie")) {
+        extraCandidates.push("d" + r);
+      }
+
+      if (r.startsWith("rop")) {
+        extraCandidates.push("d" + r);
+      }
+
+      if (r.startsWith("raak")) {
+        extraCandidates.push("d" + r);
+      }
+
+      if (r.startsWith("room")) {
+        extraCandidates.push("d" + r);
+      }
     }
 
-    // "rie" → "drie"
-    if (isDrWord && r.startsWith("rie")) {
-      extraCandidates.push("d" + r);
-    }
-
-    // "raak" → "draak"
-    if (isDrWord && r.startsWith("raak")) {
-      extraCandidates.push("d" + r);
-    }
-
-    // "room" → "droom"
-    if (isDrWord && r.startsWith("room")) {
-      extraCandidates.push("d" + r);
+    // FR cluster
+    if (t.startsWith("fr")) {
+      if (r.startsWith("ruit")) {
+        extraCandidates.push("f" + r);
+      }
     }
   }
-
-  const extraTargets: string[] = [];
 
   const allCandidates = [
     ...candidates,
     ...extraCandidates,
   ];
 
-  const allTargets = [
-    t,
-    ...extraTargets,
-  ];
+  for (const r of allCandidates) {
+    if (!r) continue;
 
-  const clusterBonus = isClusterWord ? 1 : 0;
+    // exact
+    if (r === t) {
+      return true;
+    }
 
-  for (const tgt of allTargets) {
-    for (const r of allCandidates) {
-      if (!r) continue;
+    // contains
+    if (
+      r.includes(t) ||
+      t.includes(r)
+    ) {
+      return true;
+    }
 
-      // Exact
-      if (r === tgt) return true;
+    // prefix match
+    const prefix = t.slice(
+      0,
+      Math.max(
+        2,
+        Math.floor(t.length * 0.7)
+      )
+    );
 
-      // Partial contains
-      if (r.includes(tgt) || tgt.includes(r)) {
-        return true;
-      }
+    if (
+      t.length >= 4 &&
+      r.startsWith(prefix)
+    ) {
+      return true;
+    }
 
-      // Prefix
-      const prefix = tgt.slice(
-        0,
-        Math.max(2, Math.floor(tgt.length * 0.72))
-      );
+    // levenshtein
+    const maxDist =
+      t.length >= 6 ? 2 : 1;
 
-      if (
-        tgt.length >= 4 &&
-        r.startsWith(prefix)
-      ) {
-        return true;
-      }
-
-      // Levenshtein tolerance
-      const maxDist =
-        (tgt.length >= 6 ? 2 : 1) +
-        clusterBonus;
-
-      if (
-        levenshtein(r, tgt) <= maxDist
-      ) {
-        return true;
-      }
+    if (
+      levenshtein(r, t) <= maxDist
+    ) {
+      return true;
     }
   }
 
@@ -195,10 +208,11 @@ function getSpeechRecognitionClass():
     return null;
   }
 
-  const w = window as unknown as Record<
-    string,
-    unknown
-  >;
+  const w =
+    window as unknown as Record<
+      string,
+      unknown
+    >;
 
   return (
     (w["SpeechRecognition"] ??
@@ -217,7 +231,8 @@ export function useRecognition() {
   const [listening, setListening] =
     useState(false);
 
-  const listeningRef = useRef(false);
+  const listeningRef =
+    useRef(false);
 
   const recRef =
     useRef<SpeechRec | null>(null);
@@ -233,7 +248,10 @@ export function useRecognition() {
       const SR =
         getSpeechRecognitionClass();
 
-      if (!SR || listeningRef.current) {
+      if (
+        !SR ||
+        listeningRef.current
+      ) {
         return;
       }
 
@@ -271,7 +289,8 @@ export function useRecognition() {
           ri < e.results.length;
           ri++
         ) {
-          const result = e.results[ri];
+          const result =
+            e.results[ri];
 
           for (
             let ai = 0;
@@ -287,8 +306,15 @@ export function useRecognition() {
         const best =
           transcripts[0] ?? "";
 
-        // DEBUG OUTPUT
-        console.log("Speech heard:", best);
+        console.log(
+          "Speech heard:",
+          best
+        );
+
+        console.log(
+          "Target word:",
+          targetWord
+        );
 
         const matched =
           transcripts.some((t) =>
@@ -297,6 +323,11 @@ export function useRecognition() {
               targetWord
             )
           );
+
+        console.log(
+          "Matched:",
+          matched
+        );
 
         onResult(matched, best);
       };
@@ -308,6 +339,10 @@ export function useRecognition() {
 
         setListening(false);
 
+        console.log(
+          "Speech recognition error"
+        );
+
         onResult(false, "");
       };
 
@@ -318,6 +353,11 @@ export function useRecognition() {
 
         if (!resultFired) {
           resultFired = true;
+
+          console.log(
+            "No speech detected"
+          );
+
           onResult(false, "");
         }
       };
@@ -326,7 +366,12 @@ export function useRecognition() {
         rec.start();
       } catch {
         listeningRef.current = false;
+
         setListening(false);
+
+        console.log(
+          "Speech recognition start failed"
+        );
       }
     },
     []
@@ -347,4 +392,3 @@ export function useRecognition() {
     supported,
   };
 }
-```
