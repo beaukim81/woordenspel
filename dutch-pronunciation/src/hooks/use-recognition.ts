@@ -287,6 +287,9 @@ export function useRecognition() {
         const best =
           transcripts[0] ?? "";
 
+        // DEBUG OUTPUT
+        console.log("Speech heard:", best);
+
         const matched =
           transcripts.some((t) =>
             isGoodEnough(
