@@ -1,3 +1,4 @@
+console.log("APP FILE LOADED");
 import { useRef } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
