@@ -1,3 +1,4 @@
+console.log("NEW VERSION LOADED");
 import { useCallback, useRef, useState } from "react";
 
 // ── Minimal local types — avoids relying on lib.dom SpeechRecognition ──
