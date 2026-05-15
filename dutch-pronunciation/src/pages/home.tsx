@@ -4,7 +4,6 @@ import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion"
 import { Settings, Trophy } from "lucide-react";
 import { useGameStore, getLevelFromXP, getXPProgress, type Difficulty } from "@/lib/store";
 import { getLevelTitle, nextMilestoneLevel, ACHIEVEMENTS } from "@/lib/achievements";
-import { avatarForColor } from "@/pages/profile-select";
 
 const CLUSTER_OPTIONS: {
   cluster: string; difficulty: Difficulty; label: string;
@@ -18,6 +17,8 @@ const CLUSTER_OPTIONS: {
   { cluster:"dr", difficulty:"dr", label:"DR", gradient:"from-amber-500 to-orange-600",   border:"border-b-[5px] border-amber-800",  glow:"0 6px 24px rgba(245,158,11,0.45)",  cardBg:"bg-amber-500/12",  cardBorder:"border-amber-500/35",  hint:"Draak · Droom · Druif" },
   { cluster:"sl", difficulty:"sl", label:"SL", gradient:"from-pink-500 to-rose-600",      border:"border-b-[5px] border-pink-800",   glow:"0 6px 24px rgba(236,72,153,0.45)",  cardBg:"bg-pink-500/12",   cardBorder:"border-pink-500/35",   hint:"Slang · Sleutel · Slim" },
   { cluster:"tw", difficulty:"tw", label:"TW", gradient:"from-purple-500 to-violet-600",  border:"border-b-[5px] border-purple-800", glow:"0 6px 24px rgba(168,85,247,0.45)",  cardBg:"bg-purple-500/12", cardBorder:"border-purple-500/35", hint:"Twee · Twijg · Tweeling" },
+  { cluster:"str", difficulty:"str", label:"STR", gradient:"from-fuchsia-500 to-pink-600", border:"border-b-[5px] border-fuchsia-800", glow:"0 6px 24px rgba(217,70,239,0.45)", cardBg:"bg-fuchsia-500/12", cardBorder:"border-fuchsia-500/35", hint:"Straat · Strand · Stroom" },
+  { cluster:"tr", difficulty:"tr", label:"TR", gradient:"from-cyan-500 to-sky-600", border:"border-b-[5px] border-cyan-800", glow:"0 6px 24px rgba(6,182,212,0.45)", cardBg:"bg-cyan-500/12", cardBorder:"border-cyan-500/35", hint:"Trein · Trap · Tractor" },
 ];
 
 // Stable background stars — computed once outside the component
@@ -85,8 +86,15 @@ function AnimatedNumber({ value }: { value: number }) {
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { coins, xp, difficulty, achievements, childName, startSession, setDifficulty,
-    avatarColor } = useGameStore();
+const {
+  coins,
+  xp,
+  difficulty,
+  achievements,
+  childName,
+  startSession,
+  setDifficulty,
+} = useGameStore();
 
   const level        = getLevelFromXP(xp);
   const xpProgress   = getXPProgress(xp);
@@ -159,27 +167,6 @@ export default function Home() {
             <AnimatedNumber value={coins} />
           </span>
         </motion.div>
-
-        {/* Avatar — tap to switch profile */}
-        {(() => {
-          const av = avatarForColor(avatarColor);
-          return (
-            <motion.button
-              animate={{ y: [0, -10, 0], rotate: [0, -4, 4, 0] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setLocation("/settings")}
-              className="w-16 h-16 rounded-2xl border-2 border-white/25 flex items-center
-                justify-center shadow-2xl text-4xl select-none touch-manipulation relative overflow-hidden"
-              style={{ boxShadow: `0 0 24px ${av.glow}, 0 8px 20px rgba(0,0,0,0.4)` }}
-              data-testid="avatar-icon"
-              aria-label="Instellingen"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${av.bg}`} />
-              <span className="relative z-10">{av.emoji}</span>
-            </motion.button>
-          );
-        })()}
 
         {/* Settings */}
         <motion.button
@@ -319,14 +306,39 @@ export default function Home() {
 
         {/* Cluster buttons — two rows: 4 + 3 */}
         <div role="radiogroup" aria-label="Kies klankgroep" className="flex flex-col gap-2">
-          {/* Row 1: sp bl br st */}
-          <div className="grid grid-cols-4 gap-2">
-            {CLUSTER_OPTIONS.slice(0, 4).map((opt) => <ClusterBtn key={opt.cluster} opt={opt} active={difficulty === opt.difficulty} onSelect={() => setDifficulty(opt.difficulty)} />)}
-          </div>
-          {/* Row 2: dr sl tw */}
-          <div className="grid grid-cols-3 gap-2">
-            {CLUSTER_OPTIONS.slice(4).map((opt) => <ClusterBtn key={opt.cluster} opt={opt} active={difficulty === opt.difficulty} onSelect={() => setDifficulty(opt.difficulty)} />)}
-          </div>
+
+  <div className="grid grid-cols-3 gap-2">
+    {CLUSTER_OPTIONS.slice(0, 3).map((opt) => (
+      <ClusterBtn
+        key={opt.cluster}
+        opt={opt}
+        active={difficulty === opt.difficulty}
+        onSelect={() => setDifficulty(opt.difficulty)}
+      />
+    ))}
+  </div>
+
+  <div className="grid grid-cols-3 gap-2">
+    {CLUSTER_OPTIONS.slice(3, 6).map((opt) => (
+      <ClusterBtn
+        key={opt.cluster}
+        opt={opt}
+        active={difficulty === opt.difficulty}
+        onSelect={() => setDifficulty(opt.difficulty)}
+      />
+    ))}
+  </div>
+
+  <div className="grid grid-cols-3 gap-2">
+    {CLUSTER_OPTIONS.slice(6, 9).map((opt) => (
+      <ClusterBtn
+        key={opt.cluster}
+        opt={opt}
+        active={difficulty === opt.difficulty}
+        onSelect={() => setDifficulty(opt.difficulty)}
+      />
+    ))}
+  </div>
         </div>
 
         {/* Active cluster description */}
