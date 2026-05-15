@@ -280,17 +280,6 @@ const {
         </div>
       </motion.div>
 
-      {/* ── Mascot ──────────────────────────────── */}
-      <motion.div
-        animate={{ y: [0, -14, 0], rotate: [0, 3, -3, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="text-[88px] my-2 drop-shadow-2xl select-none shrink-0"
-        style={{ filter: "drop-shadow(0 8px 24px rgba(139,92,246,0.4))" }}
-        aria-hidden="true"
-      >
-        🐉
-      </motion.div>
-
       {/* ── Cluster picker ───────────────────────
             The child taps which sound cluster to practice.
             sp = easy · dr = medium · tw = hard          */}
